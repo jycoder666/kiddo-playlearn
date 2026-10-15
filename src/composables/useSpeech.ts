@@ -6,6 +6,8 @@ const supported =
 
 const failed = ref(!supported)
 const speaking = ref(false)
+/** 最近一次要播的文案，供「再听一次」 */
+let lastText = ''
 let voice: SpeechSynthesisVoice | null = null
 let watchdog: number | undefined
 
@@ -31,7 +33,9 @@ function cancel() {
 
 function speak(text: string) {
   const settings = useSettings()
-  if (!supported || settings.muted || !text) return
+  if (!text) return
+  lastText = text
+  if (!supported || settings.muted) return
   try {
     cancel()
     const u = new SpeechSynthesisUtterance(text)
@@ -61,8 +65,39 @@ function speak(text: string) {
   }
 }
 
+/** 若静音则先打开，再播（点击发音） */
+function play(text?: string) {
+  const settings = useSettings()
+  const t = (text || lastText || '').trim()
+  if (!t) return
+  if (settings.muted) settings.muted = false
+  speak(t)
+}
+
+/** 再听最近一次 / 指定兜底文案 */
+function replay(fallback = '') {
+  play(lastText || fallback)
+}
+
+function toggleMute() {
+  const settings = useSettings()
+  settings.muted = !settings.muted
+  if (settings.muted) cancel()
+  else speak(lastText || '声音打开啦')
+}
+
 export function useSpeech() {
   const settings = useSettings()
   const iconFallback = computed(() => settings.muted || failed.value)
-  return { supported, failed, speaking, iconFallback, speak, cancel }
+  return {
+    supported,
+    failed,
+    speaking,
+    iconFallback,
+    speak,
+    play,
+    replay,
+    cancel,
+    toggleMute,
+  }
 }

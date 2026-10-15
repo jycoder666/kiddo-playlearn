@@ -7,11 +7,14 @@ import { useSettings } from '../composables/useSettings'
 import { useSpeech } from '../composables/useSpeech'
 import StarsRow from '../components/shared/StarsRow.vue'
 import HeroSprite from '../components/shared/HeroSprite.vue'
+import SpeakButton from '../components/shared/SpeakButton.vue'
 
 const router = useRouter()
 const { state, loadFailed, isUnlocked, dismissLoadError } = useProgress()
 const settings = useSettings()
-const { speak, cancel } = useSpeech()
+const { speak } = useSpeech()
+
+const homeSpeak = '小兔辨方向。点关卡开始玩，也可以去数感岛。'
 
 const STEP = 112
 const TOP = 96
@@ -60,11 +63,6 @@ function continueRun() {
   router.push({ path: `/level/${run.value.levelId}`, query: { resume: '1' } })
 }
 
-function toggleMute() {
-  settings.muted = !settings.muted
-  if (settings.muted) cancel()
-  else speak('声音打开啦')
-}
 </script>
 
 <template>
@@ -72,9 +70,8 @@ function toggleMute() {
     <header class="top">
       <h1>小兔辨方向</h1>
       <div class="tools">
-        <button class="hot tool" :aria-label="settings.muted ? '打开声音' : '关闭声音'" @click="toggleMute">
-          {{ settings.muted ? '🔇' : '🔊' }}
-        </button>
+        <button class="hot tool" aria-label="数感岛" @click="router.push('/sense')">🔢</button>
+        <SpeakButton class="tool" :text="homeSpeak" />
         <button class="hot tool" aria-label="贴纸册" @click="router.push('/stickers')">📒</button>
       </div>
     </header>

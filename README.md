@@ -82,7 +82,9 @@ npm run dev
 - 本机：http://localhost:5173/
 - 局域网：终端里的 Network 地址（同一 Wi‑Fi 手机可打开）
 
-常用页面：`/#/` 地图 · `/#/level/1`～`5` · `/#/stickers` 贴纸册
+常用页面：`/#/` 方向地图 · `/#/sense` 数感岛 · `/#/level/1`～`5` · `/#/stickers` 贴纸册
+
+数感岛（算一算 / 认一认·数字）设计见 [`docs/plans/数感岛-一期-design.md`](docs/plans/数感岛-一期-design.md)。计数物 PNG 可后续放入 `assets/art/`（`item_apple.png` 等），缺图时用 emoji 占位。
 
 ### 外网临时访问
 
