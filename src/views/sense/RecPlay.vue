@@ -18,6 +18,8 @@ import {
   shuffle,
 } from '../../data/sense/util'
 import { useSenseProgress } from '../../composables/useSenseProgress'
+import { recordAnswer } from '../../composables/useStats'
+import { noteWrongAnswer } from '../../composables/useWrongRest'
 import { useSpeech } from '../../composables/useSpeech'
 
 const route = useRoute()
@@ -75,8 +77,17 @@ const challengeLeft = ref(5)
 const challengePool: RecModeId[] = ['countPick', 'takeN', 'neighbors', 'compare']
 const activeSub = ref<RecModeId | null>(null)
 
+const missedOnce = ref(false)
+
+function markMiss() {
+  if (missedOnce.value) return
+  missedOnce.value = true
+  noteWrongAnswer()
+}
+
 function reset() {
   wrongStreak.value = 0
+  missedOnce.value = false
   flashN.value = null
   celebrate.value = false
   bigPulse.value = false
@@ -297,10 +308,12 @@ function onTapItem(it: (typeof items)[0]) {
 function onPickNumber(n: number) {
   if (playAs.value === 'neighbors') {
     if (n === center.value) {
+      markMiss()
       speak('它自己不算邻居哦')
       return
     }
     if (![center.value - 1, center.value + 1].includes(n)) {
+      markMiss()
       wrongStreak.value++
       speak('再想想前后是谁')
       if (wrongStreak.value >= 2) {
@@ -311,21 +324,37 @@ function onPickNumber(n: number) {
     if (!pickedNeighbors.value.includes(n)) pickedNeighbors.value.push(n)
     lineNeighbors.value = [...pickedNeighbors.value]
     flashN.value = n
-    if (pickedNeighbors.value.length >= 2) winSoft()
-    else speak('还有一个邻居')
+    if (pickedNeighbors.value.length >= 2) {
+      noteRecRound(`${center.value - 1}和${center.value + 1}`)
+      winSoft()
+    } else speak('还有一个邻居')
     return
   }
 
   const correct = playAs.value === 'compare' ? diff.value : target.value
 
   if (n !== correct) {
+    markMiss()
     wrongStreak.value++
     speak('再数一遍')
     unlockChoices(correct)
     return
   }
   flashN.value = n
+  noteRecRound(String(correct))
   winSoft()
+}
+
+function noteRecRound(label: string) {
+  const name = meta.value?.name
+  if (!name) return
+  recordAnswer({
+    id: `rec:${mode.value}`,
+    name,
+    group: 'rec',
+    ok: !missedOnce.value,
+    label,
+  })
 }
 
 function playFamily(kind: 'a+b' | 'b+a' | 'n-a' | 'n-b') {

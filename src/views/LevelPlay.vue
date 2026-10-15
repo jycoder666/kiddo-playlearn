@@ -6,6 +6,8 @@ import { getLevelItems, orderLevelItems, shuffleLevelItems } from '../data/level
 import { answerLabel, mapHintKey, MAP_HINT } from '../data/directions'
 import { collectWalkHops, expandWalkChains, hopSteps, walkChain } from '../data/walkChain'
 import { useProgress } from '../composables/useProgress'
+import { recordAnswer } from '../composables/useStats'
+import { noteWrongAnswer } from '../composables/useWrongRest'
 import { useLevelSession } from '../composables/useLevelSession'
 import { useSpeech } from '../composables/useSpeech'
 import { useSfx } from '../composables/useSfx'
@@ -101,6 +103,16 @@ function onAnswer(code: string) {
   if (!it) return
   const r = session.answer(code)
   if (r === 'ignored') return
+  if (r === 'wrong' && wrongCount.value === 1) noteWrongAnswer()
+  if (r === 'correct' || r === 'demo') {
+    recordAnswer({
+      id: `dir:${levelId}`,
+      name: meta.name,
+      group: 'direction',
+      ok: r === 'correct' && wrongCount.value === 0,
+      label: answerLabel(it.type, it.correct),
+    })
+  }
   if (r === 'correct') {
     sfx.correct()
     const word = PRAISE[Math.floor(Math.random() * PRAISE.length)]

@@ -19,6 +19,8 @@ import {
   shuffle,
 } from '../../data/sense/util'
 import { useSenseProgress } from '../../composables/useSenseProgress'
+import { recordAnswer } from '../../composables/useStats'
+import { noteWrongAnswer } from '../../composables/useWrongRest'
 import { useSpeech } from '../../composables/useSpeech'
 import { useSfx } from '../../composables/useSfx'
 
@@ -127,8 +129,17 @@ const challengeKinds = ['count', 'merge', 'takeaway'] as const
 const challengeKind = ref<(typeof challengeKinds)[number]>('count')
 const challengeLeft = ref(5)
 
+const missedOnce = ref(false)
+
+function markMiss() {
+  if (missedOnce.value) return
+  missedOnce.value = true
+  noteWrongAnswer()
+}
+
 function resetBoard() {
   wrongStreak.value = 0
+  missedOnce.value = false
   flashN.value = null
   celebrate.value = false
   praise.value = false
@@ -690,6 +701,7 @@ function onPickNumber(n: number) {
 
   if (mode.value === 'match') {
     if (n !== correct) {
+      markMiss()
       wrongStreak.value++
       sfx.gentle()
       speak('再数一数，哪一组一样多？')
@@ -697,11 +709,13 @@ function onPickNumber(n: number) {
       return
     }
     matchFlash.value = n
+    noteCalcRound(String(correct))
     winRound()
     return
   }
 
   if (n !== correct) {
+    markMiss()
     wrongStreak.value++
     sfx.gentle()
     speak('再数一遍试试')
@@ -740,7 +754,20 @@ function onPickNumber(n: number) {
     pendingSwap.value = { a: rightN.value, b: leftN.value }
   }
 
+  noteCalcRound(String(correct))
   winRound()
+}
+
+function noteCalcRound(label: string) {
+  const name = meta.value?.name
+  if (!name) return
+  recordAnswer({
+    id: `calc:${mode.value}`,
+    name,
+    group: 'calc',
+    ok: !missedOnce.value,
+    label,
+  })
 }
 
 function onPickMatch(optN: number) {

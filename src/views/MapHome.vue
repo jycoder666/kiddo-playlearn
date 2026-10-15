@@ -115,6 +115,8 @@ function continueRun() {
       <button v-if="run && runMeta" class="hot btn-primary continue" @click="continueRun">
         ▶ 继续上次 · 第{{ run.levelId }}关 {{ runMeta.name }}
       </button>
+      <button class="hot btn-secondary settings" type="button" @click="router.push('/stats')">答题统计</button>
+      <button class="hot btn-secondary settings" type="button" @click="router.push('/settings')">家长设置</button>
     </footer>
 
     <div v-if="loadFailed" class="modal">
@@ -186,8 +188,17 @@ h1 { margin: 0; font-size: 28px; letter-spacing: 1px; }
   z-index: 3;
 }
 .bubble.start { background: var(--warn); }
-.bottom { margin-top: auto; padding: 8px 16px calc(18px + env(safe-area-inset-bottom)); min-height: 96px; display: flex; align-items: center; }
-.continue { width: 100%; font-size: 20px; }
+.bottom {
+  margin-top: auto;
+  padding: 8px 16px calc(18px + env(safe-area-inset-bottom));
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 10px;
+}
+.continue, .settings { width: 100%; font-size: 20px; }
 .modal {
   position: absolute;
   inset: 0;

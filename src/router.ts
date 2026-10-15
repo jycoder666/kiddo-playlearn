@@ -4,6 +4,8 @@ import { getLevelMeta } from './data/levelMeta'
 import { useProgress } from './composables/useProgress'
 import { CALC_MODES, REC_MODES } from './data/sense/meta'
 import { useSenseProgress } from './composables/useSenseProgress'
+import { isAntiDebug, isAntiLocked } from './composables/useAntiAddiction'
+import { isWrongLocked } from './composables/useWrongRest'
 
 export const router = createRouter({
   history: createWebHashHistory(),
@@ -18,6 +20,8 @@ export const router = createRouter({
       },
     },
     { path: '/stickers', component: () => import('./views/Stickers.vue') },
+    { path: '/settings', component: () => import('./views/Settings.vue') },
+    { path: '/stats', component: () => import('./views/Stats.vue') },
     { path: '/sense', component: () => import('./views/sense/SenseIsland.vue') },
     { path: '/sense/calc', component: () => import('./views/sense/CalcMap.vue') },
     {
@@ -41,4 +45,11 @@ export const router = createRouter({
     },
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
+})
+
+router.beforeEach((to) => {
+  if (!isAntiLocked() && !isWrongLocked()) return
+  if (to.path === '/') return
+  if (isAntiDebug && to.path === '/settings') return
+  return '/'
 })
