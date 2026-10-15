@@ -8,7 +8,6 @@ import { useSpeech } from '../composables/useSpeech'
 import StarsRow from '../components/shared/StarsRow.vue'
 import HeroSprite from '../components/shared/HeroSprite.vue'
 import SpeakButton from '../components/shared/SpeakButton.vue'
-import { DEMO_URL } from '../config'
 
 const router = useRouter()
 const { state, loadFailed, isUnlocked, dismissLoadError } = useProgress()
@@ -16,7 +15,6 @@ const settings = useSettings()
 const { speak } = useSpeech()
 
 const homeSpeak = '小兔辨方向。点关卡开始玩，也可以去数感岛。'
-const demoHost = DEMO_URL.replace(/^https?:\/\//, '').replace(/\/$/, '')
 
 const STEP = 112
 const TOP = 96
@@ -72,13 +70,6 @@ function continueRun() {
     <header class="top">
       <h1>小兔辨方向</h1>
       <div class="tools">
-        <a
-          class="demo-url"
-          :href="DEMO_URL"
-          target="_blank"
-          rel="noopener noreferrer"
-          :aria-label="`打开在线演示 ${demoHost}`"
-        >{{ demoHost }}</a>
         <button class="hot tool" aria-label="数感岛" @click="router.push('/sense')">🔢</button>
         <SpeakButton class="tool" :text="homeSpeak" />
         <button class="hot tool" aria-label="贴纸册" @click="router.push('/stickers')">📒</button>
@@ -149,23 +140,8 @@ function continueRun() {
 }
 .top { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px 0; }
 h1 { margin: 0; font-size: 28px; letter-spacing: 1px; }
-.tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+.tools { display: flex; gap: 8px; }
 .tool { background: var(--card); box-shadow: var(--shadow); font-size: 30px; }
-.demo-url {
-  max-width: min(42vw, 200px);
-  padding: 8px 12px;
-  border-radius: 999px;
-  background: var(--card);
-  box-shadow: var(--shadow);
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--accent-strong);
-  text-decoration: none;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.demo-url:active { transform: scale(0.97); }
 .map { position: relative; margin: 8px 0; flex-shrink: 0; }
 .path { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .node-wrap {
