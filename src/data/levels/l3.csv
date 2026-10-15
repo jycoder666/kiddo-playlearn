@@ -1,0 +1,8 @@
+level_id,item_id,type,prompt_zh,prompt_icon,correct,options,meta
+3,1,compose,点左上,↖️,LU,,
+3,2,grid9,点右上,↗️,RU,,
+3,3,grid9,点左下,↙️,LD,,
+3,4,compose,点右下,↘️,RD,,
+3,5,grid9,点右下,↘️,RD,,
+3,6,walk,连跳占位,↗️,RU,,start=C;pad=8;chain=1;steps=1
+3,7,grid9,点左上,↖️,LU,,

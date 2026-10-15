@@ -1,0 +1,11 @@
+level_id,item_id,type,prompt_zh,prompt_icon,correct,options,meta
+1,1,point,点上面,⬆️,U,,
+1,2,point,点左边,⬅️,L,,
+1,3,point,点右边,➡️,R,,
+1,4,walk,向右走一步,➡️,R,,start=C;pad=4
+1,5,point,点下面,⬇️,D,,
+1,6,point,点左边,⬅️,L,,
+1,7,walk,向上走一步,⬆️,U,,start=C;pad=4
+1,8,point,点右边,➡️,R,,
+1,9,point,点上面,⬆️,U,,
+1,10,walk,向左走一步,⬅️,L,,start=R;pad=4

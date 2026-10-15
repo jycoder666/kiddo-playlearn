@@ -1,0 +1,9 @@
+level_id,item_id,type,prompt_zh,prompt_icon,correct,options,meta
+2,1,body,点小兔的左手,🤚左,hand_L,,
+2,2,body,点小兔的右手,✋右,hand_R,,
+2,3,body,摸摸小兔左耳,👂左,ear_L,,
+2,4,body,点小兔的右手,✋右,hand_R,,
+2,5,body,摸摸小兔右耳,👂右,ear_R,,
+2,6,body,点小兔的左手,🤚左,hand_L,,
+2,7,body,摸摸小兔左耳,👂左,ear_L,,
+2,8,body,点小兔的右手,✋右,hand_R,,
