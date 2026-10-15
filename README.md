@@ -8,6 +8,8 @@
 
 仓库：https://github.com/jycoder666/kiddo-playlearn
 
+**在线演示：** [https://kiddo-playlearn.vercel.app](https://kiddo-playlearn.vercel.app)
+
 ---
 
 ## 为什么做这个
@@ -117,7 +119,11 @@ npm run preview    # 本地预览生产包
 
 ### Vercel
 
-Import 本仓库 → Build：`npm run build` → Output：`dist` → Deploy。
+1. 打开 [vercel.com/new](https://vercel.com/new)，用 GitHub 登录并 Import `jycoder666/kiddo-playlearn`
+2. Framework 可留空；Build：`npm run build`；Output：`dist`（仓库已有 `vercel.json`）
+3. Deploy 完成后，把生产域名填进 `src/config.ts` 的 `DEMO_URL`，并在 GitHub 仓库右上角 **About → Website** 贴上同一地址
+
+也可本地：`npx vercel login` → `npx vercel --prod`（需本机已登录或设置环境变量 `VERCEL_TOKEN`）。
 
 ---
 
