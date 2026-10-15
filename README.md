@@ -171,10 +171,10 @@ assets/art/       # 可选 PNG（缺图有占位）
 
 ---
 
-## 打赏支持
+## 联系与打赏
 
-如果项目对你有用，打赏杯咖啡 ☕
+如果项目对你有用，打赏杯咖啡 ☕；有问题或想交流，欢迎加微信。
 
-<img src="./docs/wechat-donate.png" alt="微信支付赞赏码" width="280" />
-
-推荐使用微信支付扫码支持。
+| 赞赏（微信支付） | 加我微信 |
+|:---:|:---:|
+| <img src="./docs/wechat-donate.png" alt="微信支付赞赏码" width="240" /> | <img src="./docs/wechat-contact.png" alt="微信联系二维码" width="240" /> |
