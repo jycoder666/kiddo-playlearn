@@ -99,16 +99,27 @@ const mergeLiveR = computed(() => items.filter((it) => it.pile === 'R' && !it.go
 const mergeShowL = computed(() => (mergeAssist.value ? mergeLiveL.value : leftN.value))
 const mergeShowR = computed(() => (mergeAssist.value ? mergeLiveR.value : rightN.value))
 
-/* takeaway */
+/* takeaway：体验 → 选题；选题可开动画辅助试算 */
 const takeTotal = ref(7)
 const takeK = ref(2)
 const taken = ref(0)
-const takePhase = ref<'take' | 'ask'>('take')
+const takePhase = ref<'practice' | 'quiz'>('practice')
+const takeAssist = ref(false)
+/** 本局是否已做过体验（只一次） */
+const takePracticeDone = ref(false)
 /** 盘子里还剩几个（拿走后实时减） */
 const takeRemain = computed(() => Math.max(0, takeTotal.value - taken.value))
 const takeCountBump = ref(false)
 const isTakeawayMode = computed(
   () => mode.value === 'takeaway' || (mode.value === 'challenge' && challengeKind.value === 'takeaway'),
+)
+const showTakeCount = computed(
+  () => isTakeawayMode.value && (takePhase.value === 'practice' || takeAssist.value),
+)
+const canTakeTap = computed(
+  () =>
+    isTakeawayMode.value &&
+    (takePhase.value === 'practice' || (takePhase.value === 'quiz' && takeAssist.value)),
 )
 
 /* challenge */
@@ -128,8 +139,10 @@ function resetBoard() {
   merged.value = false
   mergeAssist.value = false
   showSplitDemo.value = false
-  takePhase.value = 'take'
+  takePhase.value = 'practice'
+  takeAssist.value = false
   taken.value = 0
+  takeCountBump.value = false
   leftIds.value = []
   rightIds.value = []
   foundBonds.value = []
@@ -302,25 +315,74 @@ function startMerge(force?: { a: number; b: number }) {
   )
 }
 
-function startTakeaway() {
-  resetBoard()
+function setupTakeawayBoard() {
   skin.value = randomSkin().id
   takeTotal.value = randInt(3, 10)
   takeK.value = randInt(1, takeTotal.value - 1)
   target.value = takeTotal.value - takeK.value
-  items.push(...makeScattered(takeTotal.value).map((it, i) => ({ ...it, id: i + 1 })))
-  takePhase.value = 'take'
+  taken.value = 0
+  takeAssist.value = false
   takeCountBump.value = false
-  prompt.value = `盘子里有 ${takeTotal.value} 个，请拿走 ${takeK.value} 个`
-  hint.value = ''
-  speak(`盘子里有 ${takeTotal.value} 个，请拿走 ${takeK.value} 个`)
+  items.splice(0, items.length)
+  items.push(...makeScattered(takeTotal.value).map((it, i) => ({ ...it, id: i + 1 })))
+}
+
+/** 体验关：动手拿走，圆盘实时报数，拿够后进入选题 */
+function startTakeawayPractice() {
+  resetBoard()
+  setupTakeawayBoard()
+  takePhase.value = 'practice'
+  choices.value = []
+  prompt.value = `先试一试：盘子里有 ${takeTotal.value} 个，请拿走 ${takeK.value} 个`
+  hint.value = '点一下拿走，看圆盘数字怎么变'
+  speak(`先试一试。盘子里有 ${takeTotal.value} 个，请拿走 ${takeK.value} 个`)
+}
+
+/** 出题关：随机 N−K=?，默认不显示剩余；可开动画辅助 */
+function startTakeawayQuiz() {
+  resetBoard()
+  setupTakeawayBoard()
+  takePhase.value = 'quiz'
+  lockedPick.value = false
+  unlockChoices(target.value)
+  prompt.value = `${takeTotal.value} 减 ${takeK.value}，等于几？`
+  hint.value = '不会可以点「动画辅助」试试'
+  speak(`${takeTotal.value} 减 ${takeK.value}，等于几？`)
+}
+
+function startTakeaway() {
+  if (takePracticeDone.value) startTakeawayQuiz()
+  else startTakeawayPractice()
+}
+
+function restoreTakePlate() {
+  taken.value = 0
+  takeCountBump.value = false
+  items.forEach((it) => {
+    it.gone = false
+    it.bounce = false
+  })
+}
+
+function toggleTakeAssist() {
+  if (takePhase.value !== 'quiz') return
+  lockedPick.value = false
+  takeAssist.value = !takeAssist.value
+  restoreTakePlate()
+  if (takeAssist.value) {
+    hint.value = '点图拿走试试，拿够后再选出答案'
+    speak('打开辅助啦。点图拿走试试，再选出答案')
+  } else {
+    hint.value = '不会可以点「动画辅助」试试'
+    speak('辅助关掉啦')
+  }
 }
 
 function startChallengeRound() {
   challengeKind.value = pick([...challengeKinds])
   if (challengeKind.value === 'count') startCount()
   else if (challengeKind.value === 'merge') startMerge()
-  else startTakeaway()
+  else startTakeawayQuiz()
 }
 
 function startMode() {
@@ -334,6 +396,7 @@ function startMode() {
   mergeDemoShown.value = false
   afterSplitDemo = null
   showSplitDemo.value = false
+  takePracticeDone.value = false
   qIndex.value = 0
   qTotal.value = mode.value === 'challenge' ? 5 : mode.value === 'split' ? needBonds.value : mode.value === 'merge' ? 2 : 4
   if (mode.value === 'challenge') {
@@ -365,7 +428,7 @@ function onTapItem(it: (typeof items)[0]) {
   }
 
   if (mode.value === 'takeaway' || (mode.value === 'challenge' && challengeKind.value === 'takeaway')) {
-    if (takePhase.value !== 'take' || it.gone) return
+    if (!canTakeTap.value || it.gone || lockedPick.value) return
     // 先弹一下再飞走
     it.bounce = true
     sfx.gentle()
@@ -379,12 +442,17 @@ function onTapItem(it: (typeof items)[0]) {
     }, 320)
     const remain = takeRemain.value
     speakNum(remain)
-    if (taken.value >= takeK.value) {
-      takePhase.value = 'ask'
-      unlockChoices(target.value)
-      prompt.value = `拿走了 ${takeK.value} 个，还剩几个？`
-      speak(prompt.value)
+    if (taken.value < takeK.value) return
+
+    if (takePhase.value === 'practice') {
+      takePracticeDone.value = true
+      prompt.value = `太棒了！还剩 ${remain} 个`
+      withPraise(() => startTakeawayQuiz())
+      return
     }
+    // 出题关 + 辅助：拿够后仍要点数字
+    hint.value = '现在选出答案吧'
+    speak(`还剩 ${remain} 个，现在选出答案吧`)
     return
   }
 
@@ -743,7 +811,8 @@ function winRound() {
 
   if (mode.value === 'takeaway') {
     if (qIndex.value < 4) {
-      withPraise(() => startTakeaway())
+      // 体验已做过：后续只出选题
+      withPraise(() => startTakeawayQuiz())
       return
     }
     finishMode('takeaway')
@@ -783,31 +852,52 @@ function poolItems(pile: 'L' | 'R' | 'C' | 'pool') {
     <div
       v-if="mode === 'count' || mode === 'takeaway' || (mode === 'challenge' && (challengeKind === 'count' || challengeKind === 'takeaway'))"
       class="field"
-      :class="{ 'take-field': isTakeawayMode }"
+      :class="{
+        'take-field': isTakeawayMode,
+        'take-quiz': isTakeawayMode && takePhase === 'quiz',
+        'take-assist-on': isTakeawayMode && takeAssist,
+      }"
     >
       <div
-        v-if="isTakeawayMode"
+        v-if="showTakeCount"
         class="plate-count"
-        :class="{ bump: takeCountBump, ask: takePhase === 'ask' }"
+        :class="{ bump: takeCountBump }"
         :aria-label="`盘子里还剩 ${takeRemain} 个`"
       >
         {{ takeRemain }}
       </div>
       <div
-        v-for="it in items"
-        :key="it.id"
-        class="abs"
-        :class="{ 'take-fly': isTakeawayMode && it.gone }"
-        :style="{ left: it.x + '%', top: it.y + '%' }"
+        class="take-items"
+        :class="{ locked: isTakeawayMode && takePhase === 'quiz' && !takeAssist }"
       >
-        <CountItem
-          :skin="skin"
-          :lit="it.lit"
-          :gone="it.gone && !isTakeawayMode"
-          :bouncing="it.bounce"
-          @click="onTapItem(it)"
-        />
+        <div
+          v-for="it in items"
+          :key="it.id"
+          class="abs"
+          :class="{ 'take-fly': isTakeawayMode && it.gone }"
+          :style="{ left: it.x + '%', top: it.y + '%' }"
+        >
+          <CountItem
+            :skin="skin"
+            :lit="it.lit"
+            :gone="it.gone && !isTakeawayMode"
+            :bouncing="it.bounce"
+            :interactive="!isTakeawayMode || canTakeTap"
+            @click="onTapItem(it)"
+          />
+        </div>
       </div>
+    </div>
+    <div v-if="isTakeawayMode && takePhase === 'quiz'" class="take-assist-row">
+      <button
+        type="button"
+        class="merge-assist-btn"
+        :class="{ on: takeAssist }"
+        @click.stop="toggleTakeAssist"
+      >
+        {{ takeAssist ? '关闭辅助' : '动画辅助' }}
+      </button>
+      <span v-if="takeAssist" class="merge-assist-tip">点图拿走，拿够后再选答案</span>
     </div>
 
     <!-- match -->
@@ -1007,7 +1097,7 @@ function poolItems(pile: 'L' | 'R' | 'C' | 'pool') {
     </div>
 
     <NumberButtons
-      v-if="choices.length && mode !== 'match' && mode !== 'split'"
+      v-if="choices.length && mode !== 'match' && mode !== 'split' && !(isTakeawayMode && takePhase === 'practice')"
       class="nums"
       :options="choices"
       :flash-correct="flashN"
@@ -1059,6 +1149,10 @@ function poolItems(pile: 'L' | 'R' | 'C' | 'pool') {
   background: rgba(255, 255, 255, 0.62);
   border: 2px dashed rgba(95, 169, 198, 0.35);
 }
+.field.take-quiz:not(.take-assist-on) {
+  border-style: solid;
+  border-color: rgba(95, 169, 198, 0.28);
+}
 .plate-count {
   position: absolute;
   top: 10px;
@@ -1079,13 +1173,28 @@ function poolItems(pile: 'L' | 'R' | 'C' | 'pool') {
   pointer-events: none;
   line-height: 1;
 }
-.plate-count.ask {
-  color: #2f8f6b;
-  background: linear-gradient(180deg, #e8f8f0 0%, #c8eedc 100%);
-  border-color: #8fd4b8;
-}
 .plate-count.bump {
   animation: countBump 0.32s ease;
+}
+.take-items {
+  position: absolute;
+  inset: 0;
+}
+.take-items.locked {
+  pointer-events: none;
+}
+.take-assist-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin: 8px 16px 0;
+  position: relative;
+  z-index: 5;
+}
+.take-assist-row .merge-assist-btn {
+  pointer-events: auto;
+  cursor: pointer;
 }
 @keyframes countBump {
   0% { transform: scale(1); }
