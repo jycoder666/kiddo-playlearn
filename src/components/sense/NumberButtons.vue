@@ -20,8 +20,8 @@ function onPick(n: number) {
 <template>
   <div class="pad" role="group" aria-label="选数字">
     <button
-      v-for="n in options"
-      :key="n"
+      v-for="(n, idx) in options"
+      :key="`${idx}-${n}`"
       type="button"
       class="hot num"
       :class="{ flash: flashCorrect === n || pulse === n }"

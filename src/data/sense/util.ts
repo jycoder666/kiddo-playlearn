@@ -61,15 +61,22 @@ export const CONFUSE_PAIRS: Record<number, number> = {
   8: 3,
 }
 
-/** 生成含正确答案的数字选项；错2次后可缩到2选1 */
+/** 生成含正确答案的数字选项（保证不重复）；错2次后可缩到2选1 */
 export function numberChoices(correct: number, count = 4, narrow = false): number[] {
+  const ans = Math.min(10, Math.max(1, Math.round(correct)))
   if (narrow) {
-    const other = CONFUSE_PAIRS[correct] ?? (correct === 1 ? 2 : correct - 1)
-    return shuffle([correct, other])
+    const other = CONFUSE_PAIRS[ans] ?? (ans === 1 ? 2 : ans - 1)
+    return shuffle([ans, other])
   }
-  const set = new Set<number>([correct])
-  const confuse = CONFUSE_PAIRS[correct]
-  if (confuse) set.add(confuse)
+  const set = new Set<number>([ans])
+  const confuse = CONFUSE_PAIRS[ans]
+  if (confuse != null && confuse !== ans) set.add(confuse)
+  // 优先贴近答案的干扰项，避免远数字凑数
+  const near = [ans - 1, ans + 1, ans - 2, ans + 2, ans - 3, ans + 3]
+  for (const n of near) {
+    if (set.size >= count) break
+    if (n >= 1 && n <= 10) set.add(n)
+  }
   while (set.size < count) {
     set.add(randInt(1, 10))
   }

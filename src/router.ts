@@ -2,7 +2,7 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import MapHome from './views/MapHome.vue'
 import { getLevelMeta } from './data/levelMeta'
 import { useProgress } from './composables/useProgress'
-import { CALC_MODES, REC_MODES } from './data/sense/meta'
+import { CALC_MODES, CMP_MODES, REC_MODES } from './data/sense/meta'
 import { useSenseProgress } from './composables/useSenseProgress'
 import { isAntiDebug, isAntiLocked } from './composables/useAntiAddiction'
 import { isWrongLocked } from './composables/useWrongRest'
@@ -41,6 +41,16 @@ export const router = createRouter({
         const mode = String(to.params.mode)
         if (!REC_MODES.some((m) => m.id === mode)) return '/sense/recognize'
         if (!useSenseProgress().isRecUnlocked(mode as never)) return '/sense/recognize'
+      },
+    },
+    { path: '/sense/compare', component: () => import('./views/sense/CmpMap.vue') },
+    {
+      path: '/sense/compare/:mode',
+      component: () => import('./views/sense/CmpPlay.vue'),
+      beforeEnter: (to) => {
+        const mode = String(to.params.mode)
+        if (!CMP_MODES.some((m) => m.id === mode)) return '/sense/compare'
+        if (!useSenseProgress().isCmpUnlocked(mode as never)) return '/sense/compare'
       },
     },
     { path: '/:pathMatch(.*)*', redirect: '/' },

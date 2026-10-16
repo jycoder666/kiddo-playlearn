@@ -1,16 +1,10 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { useSpeech } from '../../composables/useSpeech'
 import SpeakButton from '../../components/shared/SpeakButton.vue'
 
 const router = useRouter()
-const { speak } = useSpeech()
 
-const islandSpeak = '数感岛。用玩一玩，把一到十认稳、算稳。点算一算或认一认开始。'
-
-function openCompare() {
-  speak('比一比马上就来，先玩算一算或认一认吧')
-}
+const islandSpeak = '数感岛。用玩一玩，把一到十认稳、算稳。点比一比、算一算或认一认开始。'
 </script>
 
 <template>
@@ -23,10 +17,10 @@ function openCompare() {
     <p class="lead">用玩一玩，把 1～10 认稳、算稳</p>
 
     <div class="cards">
-      <button class="card locked" type="button" @click="openCompare">
+      <button class="card open sky" type="button" @click="router.push('/sense/compare')">
         <span class="emo">⚖️</span>
         <span class="name">比一比</span>
-        <span class="tag">即将开放</span>
+        <span class="tag">大小 · 长短 · 高低</span>
       </button>
       <button class="card open" type="button" @click="router.push('/sense/calc')">
         <span class="emo">🧮</span>
@@ -73,7 +67,7 @@ h1 { margin: 0; text-align: center; font-size: 28px; }
 }
 .card.open { background: linear-gradient(135deg, #fff 40%, #ffe8e2); }
 .card.open.mint { background: linear-gradient(135deg, #fff 40%, #e4f5ef); }
-.card.locked { opacity: 0.72; }
+.card.open.sky { background: linear-gradient(135deg, #fff 40%, #d9eef7); }
 .emo { font-size: 40px; }
 .name { font-size: 26px; font-weight: 900; }
 .tag { font-size: 16px; font-weight: 700; color: var(--ink-soft); }

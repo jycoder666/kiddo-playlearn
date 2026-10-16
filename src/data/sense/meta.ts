@@ -8,6 +8,7 @@ export type RecModeId =
   | 'family'
   | 'compare'
   | 'challenge'
+export type CmpModeId = 'size' | 'length' | 'height' | 'challenge'
 
 export interface SenseModeMeta {
   id: string
@@ -36,5 +37,13 @@ export const REC_MODES: SenseModeMeta[] = [
   { id: 'challenge', name: '认一认大闯关', emoji: '⭐', blurb: '混合 5 题巩固' },
 ]
 
+export const CMP_MODES: SenseModeMeta[] = [
+  { id: 'size', name: '比大小', emoji: '⚖️', blurb: '哪个更大？一样大吗？' },
+  { id: 'length', name: '比长短', emoji: '📏', blurb: '哪根更长？' },
+  { id: 'height', name: '比高低', emoji: '🗼', blurb: '谁更高？谁更矮？' },
+  { id: 'challenge', name: '比一比大闯关', emoji: '🏁', blurb: '大小长短高低混合练' },
+]
+
 export const CALC_UNLOCK_ORDER = CALC_MODES.map((m) => m.id) as CalcModeId[]
 export const REC_UNLOCK_ORDER = REC_MODES.map((m) => m.id) as RecModeId[]
+export const CMP_UNLOCK_ORDER = CMP_MODES.map((m) => m.id) as CmpModeId[]
