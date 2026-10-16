@@ -2,7 +2,7 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import MapHome from './views/MapHome.vue'
 import { getLevelMeta } from './data/levelMeta'
 import { useProgress } from './composables/useProgress'
-import { CALC_MODES, CMP_MODES, REC_MODES } from './data/sense/meta'
+import { ATTR_MODES, CALC_MODES, CMP_MODES, COMPOSE_MODES, REC_MODES } from './data/sense/meta'
 import { useSenseProgress } from './composables/useSenseProgress'
 import { isAntiDebug, isAntiLocked } from './composables/useAntiAddiction'
 import { isWrongLocked } from './composables/useWrongRest'
@@ -36,11 +36,16 @@ export const router = createRouter({
     { path: '/sense/recognize', component: () => import('./views/sense/RecMap.vue') },
     {
       path: '/sense/recognize/:mode',
-      component: () => import('./views/sense/RecPlay.vue'),
+      component: () => import('./views/sense/RecognizePlay.vue'),
       beforeEnter: (to) => {
         const mode = String(to.params.mode)
+        const progress = useSenseProgress()
+        if (ATTR_MODES.some((m) => m.id === mode)) {
+          if (!progress.isAttrUnlocked(mode as never)) return '/sense/recognize'
+          return
+        }
         if (!REC_MODES.some((m) => m.id === mode)) return '/sense/recognize'
-        if (!useSenseProgress().isRecUnlocked(mode as never)) return '/sense/recognize'
+        if (!progress.isRecUnlocked(mode as never)) return '/sense/recognize'
       },
     },
     { path: '/sense/compare', component: () => import('./views/sense/CmpMap.vue') },
@@ -51,6 +56,16 @@ export const router = createRouter({
         const mode = String(to.params.mode)
         if (!CMP_MODES.some((m) => m.id === mode)) return '/sense/compare'
         if (!useSenseProgress().isCmpUnlocked(mode as never)) return '/sense/compare'
+      },
+    },
+    { path: '/sense/compose', component: () => import('./views/sense/ComposeMap.vue') },
+    {
+      path: '/sense/compose/:mode',
+      component: () => import('./views/sense/ComposePlay.vue'),
+      beforeEnter: (to) => {
+        const mode = String(to.params.mode)
+        if (!COMPOSE_MODES.some((m) => m.id === mode)) return '/sense/compose'
+        if (!useSenseProgress().isComposeUnlocked(mode as never)) return '/sense/compose'
       },
     },
     { path: '/:pathMatch(.*)*', redirect: '/' },

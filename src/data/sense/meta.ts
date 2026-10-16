@@ -9,6 +9,8 @@ export type RecModeId =
   | 'compare'
   | 'challenge'
 export type CmpModeId = 'size' | 'length' | 'height' | 'challenge'
+export type AttrModeId = 'colorIntro' | 'colorQuiz' | 'shapeIntro' | 'shapeQuiz' | 'combo'
+export type ComposeModeId = 'atlas' | 'dissect' | 'assemble'
 
 export interface SenseModeMeta {
   id: string
@@ -44,6 +46,23 @@ export const CMP_MODES: SenseModeMeta[] = [
   { id: 'challenge', name: '比一比大闯关', emoji: '🏁', blurb: '大小长短高低混合练' },
 ]
 
+/** 颜色 / 图形线：两路汇合，不并入 REC_UNLOCK_ORDER */
+export const ATTR_MODES: SenseModeMeta[] = [
+  { id: 'colorIntro', name: '颜色来报到', emoji: '🎨', blurb: '滑卡认识十二种颜色' },
+  { id: 'colorQuiz', name: '认颜色', emoji: '🟥', blurb: '看色块，点出名字' },
+  { id: 'shapeIntro', name: '图形来报到', emoji: '🔷', blurb: '滑卡认识八种图形' },
+  { id: 'shapeQuiz', name: '认图形', emoji: '△', blurb: '看图形，点出名字' },
+  { id: 'combo', name: '颜色图形组合', emoji: '🌈', blurb: '红三角形是哪一个？' },
+]
+
+/** 拼图形：三模式全开，不依赖其它轨 */
+export const COMPOSE_MODES: SenseModeMeta[] = [
+  { id: 'atlas', name: '图鉴', emoji: '📖', blurb: '看看大图形能拆成什么' },
+  { id: 'dissect', name: '拆一拆', emoji: '✂️', blurb: '大图能分成几块？' },
+  { id: 'assemble', name: '拼一拼', emoji: '🧩', blurb: '转一转，拖进轮廓' },
+]
+
 export const CALC_UNLOCK_ORDER = CALC_MODES.map((m) => m.id) as CalcModeId[]
 export const REC_UNLOCK_ORDER = REC_MODES.map((m) => m.id) as RecModeId[]
 export const CMP_UNLOCK_ORDER = CMP_MODES.map((m) => m.id) as CmpModeId[]
+export const COMPOSE_UNLOCK_ORDER = COMPOSE_MODES.map((m) => m.id) as ComposeModeId[]

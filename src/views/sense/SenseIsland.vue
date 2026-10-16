@@ -4,7 +4,7 @@ import SpeakButton from '../../components/shared/SpeakButton.vue'
 
 const router = useRouter()
 
-const islandSpeak = '数感岛。用玩一玩，把一到十认稳、算稳。点比一比、算一算或认一认开始。'
+const islandSpeak = '数感岛。用玩一玩，把一到十认稳、算稳，还可以拼图形。点比一比、算一算、认一认或拼图形开始。'
 </script>
 
 <template>
@@ -30,7 +30,12 @@ const islandSpeak = '数感岛。用玩一玩，把一到十认稳、算稳。�
       <button class="card open mint" type="button" @click="router.push('/sense/recognize')">
         <span class="emo">🔢</span>
         <span class="name">认一认</span>
-        <span class="tag">数字 · 邻居 · 互逆</span>
+        <span class="tag">数字 · 颜色 · 图形</span>
+      </button>
+      <button class="card open lilac" type="button" @click="router.push('/sense/compose')">
+        <span class="emo">🧩</span>
+        <span class="name">拼图形</span>
+        <span class="tag">图鉴 · 拆一拆 · 拼一拼</span>
       </button>
     </div>
   </div>
@@ -68,6 +73,7 @@ h1 { margin: 0; text-align: center; font-size: 28px; }
 .card.open { background: linear-gradient(135deg, #fff 40%, #ffe8e2); }
 .card.open.mint { background: linear-gradient(135deg, #fff 40%, #e4f5ef); }
 .card.open.sky { background: linear-gradient(135deg, #fff 40%, #d9eef7); }
+.card.open.lilac { background: linear-gradient(135deg, #fff 40%, #ebe0f5); }
 .emo { font-size: 40px; }
 .name { font-size: 26px; font-weight: 900; }
 .tag { font-size: 16px; font-weight: 700; color: var(--ink-soft); }
