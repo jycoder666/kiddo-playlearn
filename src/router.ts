@@ -81,7 +81,13 @@ export const router = createRouter({
       beforeEnter: (to) => {
         const slug = String(to.params.slug)
         const id =
-          slug === 'num-pair' ? 'numPair' : slug === 'color-pair' ? 'colorPair' : null
+          slug === 'num-pair'
+            ? 'numPair'
+            : slug === 'color-pair'
+              ? 'colorPair'
+              : slug === 'shape-pair'
+                ? 'shapePair'
+                : null
         if (!id || !MEMORY_MODES.some((m) => m.id === id)) return '/sense/recognize'
         if (!useSenseProgress().isMemoryUnlocked(id)) return '/sense/recognize'
       },

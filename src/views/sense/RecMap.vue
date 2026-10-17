@@ -26,6 +26,7 @@ const comboMeta = ATTR_MODES.find((m) => m.id === 'combo')!
 const MEMORY_SLUG: Record<MemoryModeId, string> = {
   numPair: 'num-pair',
   colorPair: 'color-pair',
+  shapePair: 'shape-pair',
 }
 
 function openRec(id: string) {
@@ -90,7 +91,7 @@ function openMemory(id: MemoryModeId) {
 
     <section class="sec">
       <h2>记忆</h2>
-      <p class="lead">翻牌 · 数字对数量 · 同色配对</p>
+      <p class="lead">翻牌 · 数字 · 颜色 · 图形</p>
       <div class="list">
         <button
           v-for="m in MEMORY_MODES"

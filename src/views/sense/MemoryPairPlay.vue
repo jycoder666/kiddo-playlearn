@@ -3,16 +3,16 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import SenseChrome from '../../components/sense/SenseChrome.vue'
 import Celebrate from '../../components/sense/Celebrate.vue'
-import { COLORS } from '../../data/sense/attr'
+import { COLORS, SHAPES, type ShapeId } from '../../data/sense/attr'
 import { MEMORY_MODES, type MemoryModeId } from '../../data/sense/meta'
-import { shuffle } from '../../data/sense/util'
+import { pick, shuffle } from '../../data/sense/util'
 import { useSenseProgress } from '../../composables/useSenseProgress'
 import { useSpeech } from '../../composables/useSpeech'
 
 interface Card {
   id: string
   pairId: string | number
-  kind: 'digit' | 'qty' | 'color'
+  kind: 'digit' | 'qty' | 'color' | 'shape'
   n?: number
   hex?: string
   name?: string
@@ -24,16 +24,21 @@ interface Card {
 const POOL = [1, 2, 3, 4, 5] as const
 const MISMATCH_MS = 700
 const LIGHT_COLORS = new Set(['white', 'yellow', 'pink', 'gray', 'cyan'])
+const LIGHT_HEX = new Set(['#f7f4ef', '#f0c14a', '#f0a0c0', '#9aa0a6', '#3db8b0'])
 
 const route = useRoute()
 const router = useRouter()
 const { completeMemory } = useSenseProgress()
 const { speak } = useSpeech()
 
-const modeId = computed<MemoryModeId>(() =>
-  String(route.params.slug) === 'color-pair' ? 'colorPair' : 'numPair',
-)
+const modeId = computed<MemoryModeId>(() => {
+  const s = String(route.params.slug)
+  if (s === 'color-pair') return 'colorPair'
+  if (s === 'shape-pair') return 'shapePair'
+  return 'numPair'
+})
 const isColor = computed(() => modeId.value === 'colorPair')
+const isShape = computed(() => modeId.value === 'shapePair')
 const meta = computed(() => MEMORY_MODES.find((m) => m.id === modeId.value)!)
 
 const round = ref(1)
@@ -50,6 +55,29 @@ let bridgeTimer: ReturnType<typeof setTimeout> | null = null
 const hint = computed(() =>
   round.value === 1 ? '第一局 · 3 对' : '第二局 · 4 对',
 )
+
+function shapeClip(id: ShapeId): string {
+  switch (id) {
+    case 'circle':
+      return 'circle(50% at 50% 50%)'
+    case 'ellipse':
+      return 'ellipse(50% 38% at 50% 50%)'
+    case 'square':
+      return 'inset(12% 12% 12% 12%)'
+    case 'rect':
+      return 'inset(22% 6% 22% 6%)'
+    case 'triangle':
+      return 'polygon(50% 8%, 92% 88%, 8% 88%)'
+    case 'diamond':
+      return 'polygon(50% 6%, 92% 50%, 50% 94%, 8% 50%)'
+    case 'trapezoid':
+      return 'polygon(22% 18%, 78% 18%, 94% 82%, 6% 82%)'
+    case 'star':
+      return 'polygon(50% 4%, 61% 38%, 96% 38%, 68% 58%, 79% 92%, 50% 72%, 21% 92%, 32% 58%, 4% 38%, 39% 38%)'
+    default:
+      return 'circle(50% at 50% 50%)'
+  }
+}
 
 function clearTimers() {
   if (flipTimer) {
@@ -73,7 +101,31 @@ function deal(pairCount: number) {
   bridge.value = false
   const list: Card[] = []
 
-  if (isColor.value) {
+  if (isShape.value) {
+    const sameColor = round.value === 1
+    const picked = shuffle([...SHAPES]).slice(0, pairCount)
+    for (const sh of picked) {
+      const hexA = pick(COLORS).hex
+      const hexB = sameColor
+        ? hexA
+        : pick(COLORS.filter((c) => c.hex !== hexA)).hex
+      ;[hexA, hexB].forEach((hex, i) => {
+        list.push({
+          id: `s-${sh.id}-${i}-${pairCount}`,
+          pairId: sh.id,
+          kind: 'shape',
+          hex,
+          name: sh.name,
+          faceUp: false,
+          matched: false,
+          pulse: false,
+        })
+      })
+    }
+    prompt.value = sameColor
+      ? '翻两张，找出一样的图形'
+      : '再来难一点：颜色不同也要找同形'
+  } else if (isColor.value) {
     const picked = shuffle([...COLORS]).slice(0, pairCount)
     for (const c of picked) {
       for (const copy of [0, 1] as const) {
@@ -131,6 +183,7 @@ function allMatched(): boolean {
 
 function isMatch(a: Card, b: Card): boolean {
   if (a.pairId !== b.pairId || a.id === b.id) return false
+  if (isShape.value) return a.kind === 'shape' && b.kind === 'shape'
   if (isColor.value) return a.kind === 'color' && b.kind === 'color'
   return a.kind !== b.kind
 }
@@ -139,7 +192,13 @@ function faceLabel(c: Card): string {
   if (!(c.faceUp || c.matched)) return '牌背面，点开'
   if (c.kind === 'digit') return `数字 ${c.n}`
   if (c.kind === 'qty') return `${c.n} 个苹果`
+  if (c.kind === 'shape') return c.name || '图形'
   return c.name || '颜色'
+}
+
+function matchSpeak(a: Card): string {
+  if (isShape.value || isColor.value) return a.name || ''
+  return String(a.n)
 }
 
 function onCardClick(card: Card) {
@@ -162,7 +221,7 @@ function onCardClick(card: Card) {
     b.matched = true
     a.pulse = true
     b.pulse = true
-    speak(isColor.value ? a.name || '' : String(a.n))
+    speak(matchSpeak(a))
     flipTimer = setTimeout(() => {
       a.pulse = false
       b.pulse = false
@@ -215,6 +274,12 @@ function resetForMode() {
   deal(3)
 }
 
+function isLightFill(c: Card): boolean {
+  if (c.kind === 'color') return LIGHT_COLORS.has(String(c.pairId))
+  if (c.kind === 'shape' && c.hex) return LIGHT_HEX.has(c.hex)
+  return false
+}
+
 watch(modeId, () => resetForMode())
 
 onMounted(() => deal(3))
@@ -251,15 +316,30 @@ onUnmounted(() => clearTimers())
         >
           <span class="inner">
             <span class="face back" aria-hidden="true">★</span>
-            <span class="face front" :class="{ colorFront: c.kind === 'color' }">
+            <span
+              class="face front"
+              :class="{ colorFront: c.kind === 'color' }"
+            >
               <span v-if="c.kind === 'digit'" class="digit">{{ c.n }}</span>
               <span v-else-if="c.kind === 'qty'" class="qty" :aria-hidden="true">
                 <span v-for="k in c.n" :key="k" class="apple">🍎</span>
               </span>
+              <span v-else-if="c.kind === 'shape'" class="shape-face">
+                <span
+                  class="shape-glyph"
+                  :class="{ light: isLightFill(c) }"
+                  :style="{
+                    background: c.hex,
+                    clipPath: shapeClip(c.pairId as ShapeId),
+                  }"
+                  aria-hidden="true"
+                />
+                <span class="shape-name">{{ c.name }}</span>
+              </span>
               <span
                 v-else
                 class="swatch"
-                :class="{ light: LIGHT_COLORS.has(String(c.pairId)) }"
+                :class="{ light: isLightFill(c) }"
                 :style="{ background: c.hex }"
                 aria-hidden="true"
               />
@@ -380,8 +460,32 @@ onUnmounted(() => clearTimers())
   height: 100%;
   border-radius: 18px;
 }
-.swatch.light {
+.swatch.light,
+.shape-glyph.light {
   box-shadow: inset 0 0 0 2px rgba(92, 75, 81, 0.28);
+}
+.shape-face {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 4px;
+  width: 100%;
+  height: 100%;
+}
+.shape-glyph {
+  display: block;
+  width: clamp(40px, 12vw, 56px);
+  height: clamp(40px, 12vw, 56px);
+  flex-shrink: 0;
+}
+.shape-name {
+  font-size: clamp(12px, 3.2vw, 15px);
+  font-weight: 900;
+  color: var(--ink);
+  line-height: 1.1;
+  text-align: center;
 }
 
 .flip.matched .front {

@@ -157,7 +157,7 @@ function isComposeUnlocked(id: ComposeModeId) {
 
 /** 记忆关目前全部开放；预留 id 校验 */
 function isMemoryUnlocked(id: MemoryModeId) {
-  return id === 'numPair' || id === 'colorPair'
+  return id === 'numPair' || id === 'colorPair' || id === 'shapePair'
 }
 
 function completeCalc(id: CalcModeId, stars = 2) {
@@ -207,7 +207,7 @@ function completeCompose(id: ComposeModeId, stars = 2) {
 }
 
 function completeMemory(id: MemoryModeId, stars = 2) {
-  if (id !== 'numPair' && id !== 'colorPair') return
+  if (id !== 'numPair' && id !== 'colorPair' && id !== 'shapePair') return
   memory.done[id] = true
   memory.stars[id] = Math.max(memory.stars[id] ?? 0, stars)
   saveMemory(memory)
