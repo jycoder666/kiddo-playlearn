@@ -1,20 +1,27 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { ATTR_MODES, REC_MODES, type AttrModeId, type RecModeId } from '../../data/sense/meta'
+import {
+  ATTR_MODES,
+  MEMORY_MODES,
+  REC_MODES,
+  type AttrModeId,
+  type RecModeId,
+} from '../../data/sense/meta'
 import { useSenseProgress } from '../../composables/useSenseProgress'
 import { useSpeech } from '../../composables/useSpeech'
 import StarsRow from '../../components/shared/StarsRow.vue'
 import SpeakButton from '../../components/shared/SpeakButton.vue'
 
 const router = useRouter()
-const { rec, attr, isRecUnlocked, isAttrUnlocked } = useSenseProgress()
+const { rec, attr, memory, isRecUnlocked, isAttrUnlocked, isMemoryUnlocked } = useSenseProgress()
 const { speak } = useSpeech()
 
-const mapSpeak = '认一认。先玩数字，也可以学颜色和图形。点下面一关开始玩。'
+const mapSpeak = '认一认。先玩数字，也可以学颜色和图形，还能玩记忆翻牌。点下面一关开始玩。'
 
 const colorLine = ATTR_MODES.filter((m) => m.id === 'colorIntro' || m.id === 'colorQuiz')
 const shapeLine = ATTR_MODES.filter((m) => m.id === 'shapeIntro' || m.id === 'shapeQuiz')
 const comboMeta = ATTR_MODES.find((m) => m.id === 'combo')!
+const memoryMeta = MEMORY_MODES.find((m) => m.id === 'numPair')!
 
 function openRec(id: string) {
   const mode = id as RecModeId
@@ -35,6 +42,14 @@ function openAttr(id: string) {
     return
   }
   router.push(`/sense/recognize/${mode}`)
+}
+
+function openMemory() {
+  if (!isMemoryUnlocked('numPair')) {
+    speak('先过前面这一关哦')
+    return
+  }
+  router.push('/sense/memory/num-pair')
 }
 </script>
 
@@ -63,6 +78,26 @@ function openAttr(id: string) {
             <span class="name">{{ m.emoji }} {{ m.name }}</span>
             <span class="blurb">{{ m.blurb }}</span>
             <StarsRow :count="rec.stars[m.id] ?? 0" :size="16" />
+          </span>
+        </button>
+      </div>
+    </section>
+
+    <section class="sec">
+      <h2>记忆</h2>
+      <p class="lead">翻牌 · 数字对数量</p>
+      <div class="list">
+        <button
+          type="button"
+          class="row"
+          :class="{ locked: !isMemoryUnlocked('numPair') }"
+          @click="openMemory"
+        >
+          <span class="idx lavender">{{ isMemoryUnlocked('numPair') ? '·' : '🔒' }}</span>
+          <span class="body">
+            <span class="name">{{ memoryMeta.emoji }} {{ memoryMeta.name }}</span>
+            <span class="blurb">{{ memoryMeta.blurb }}</span>
+            <StarsRow :count="memory.stars.numPair ?? 0" :size="16" />
           </span>
         </button>
       </div>
@@ -182,6 +217,7 @@ h2 { margin: 18px 0 0; text-align: center; font-size: 18px; font-weight: 900; }
 .mint { background: var(--mint); }
 .peach { background: #f0a07a; }
 .sky { background: #7eb8d9; }
+.lavender { background: #9b8ec4; }
 .rainbow { background: linear-gradient(135deg, #f08a3a, #8e6cc9); }
 .body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .name { font-size: 18px; font-weight: 900; }

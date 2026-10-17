@@ -11,6 +11,8 @@ export type RecModeId =
 export type CmpModeId = 'size' | 'length' | 'height' | 'challenge'
 export type AttrModeId = 'colorIntro' | 'colorQuiz' | 'shapeIntro' | 'shapeQuiz' | 'combo'
 export type ComposeModeId = 'atlas' | 'dissect' | 'assemble'
+/** 记忆翻牌线：独立于认一认数字 / 颜色图形 */
+export type MemoryModeId = 'numPair'
 
 export interface SenseModeMeta {
   id: string
@@ -60,6 +62,11 @@ export const COMPOSE_MODES: SenseModeMeta[] = [
   { id: 'atlas', name: '图鉴', emoji: '📖', blurb: '看看大图形能拆成什么' },
   { id: 'dissect', name: '拆一拆', emoji: '✂️', blurb: '大图能分成几块？' },
   { id: 'assemble', name: '拼一拼', emoji: '🧩', blurb: '转一转，拖进轮廓' },
+]
+
+/** 记忆翻牌：与 REC / ATTR 进度独立 */
+export const MEMORY_MODES: SenseModeMeta[] = [
+  { id: 'numPair', name: '数字配对', emoji: '🃏', blurb: '翻牌：数字对上苹果数量' },
 ]
 
 export const CALC_UNLOCK_ORDER = CALC_MODES.map((m) => m.id) as CalcModeId[]

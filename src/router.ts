@@ -2,7 +2,14 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import MapHome from './views/MapHome.vue'
 import { getLevelMeta } from './data/levelMeta'
 import { useProgress } from './composables/useProgress'
-import { ATTR_MODES, CALC_MODES, CMP_MODES, COMPOSE_MODES, REC_MODES } from './data/sense/meta'
+import {
+  ATTR_MODES,
+  CALC_MODES,
+  CMP_MODES,
+  COMPOSE_MODES,
+  MEMORY_MODES,
+  REC_MODES,
+} from './data/sense/meta'
 import { useSenseProgress } from './composables/useSenseProgress'
 import { isAntiDebug, isAntiLocked } from './composables/useAntiAddiction'
 import { isWrongLocked } from './composables/useWrongRest'
@@ -66,6 +73,14 @@ export const router = createRouter({
         const mode = String(to.params.mode)
         if (!COMPOSE_MODES.some((m) => m.id === mode)) return '/sense/compose'
         if (!useSenseProgress().isComposeUnlocked(mode as never)) return '/sense/compose'
+      },
+    },
+    {
+      path: '/sense/memory/num-pair',
+      component: () => import('./views/sense/MemoryPairPlay.vue'),
+      beforeEnter: () => {
+        if (!MEMORY_MODES.some((m) => m.id === 'numPair')) return '/sense/recognize'
+        if (!useSenseProgress().isMemoryUnlocked('numPair')) return '/sense/recognize'
       },
     },
     { path: '/:pathMatch(.*)*', redirect: '/' },

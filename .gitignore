@@ -3,3 +3,5 @@ dist/
 .DS_Store
 *.local
 .vercel
+git-pull.bat
+git-pull.token

@@ -8,6 +8,7 @@ import {
   type CalcModeId,
   type CmpModeId,
   type ComposeModeId,
+  type MemoryModeId,
   type RecModeId,
 } from '../data/sense/meta'
 
@@ -23,11 +24,15 @@ interface AttrState {
   stars: Record<string, number>
 }
 
+/** 记忆翻牌线：集合通关，与 attr 同形 */
+type MemoryState = AttrState
+
 const CALC_KEY = 'kiddo-playlearn:number:v1'
 const REC_KEY = 'kiddo-playlearn:number:recognize:v1'
 const CMP_KEY = 'kiddo-playlearn:number:compare:v1'
 const ATTR_KEY = 'kiddo-playlearn:number:recognize-attr:v1'
 const COMPOSE_KEY = 'kiddo-playlearn:number:compose:v1'
+const MEMORY_KEY = 'kiddo-playlearn:number:memory:v1'
 
 function freshTrack(_orderLen: number): TrackState {
   return { unlockedIndex: 0, stars: {}, stickers: {} }
@@ -84,10 +89,38 @@ function saveAttr(state: AttrState) {
   }
 }
 
+function freshMemory(): MemoryState {
+  return { done: {}, stars: {} }
+}
+
+function loadMemory(): MemoryState {
+  const base = freshMemory()
+  try {
+    const raw = localStorage.getItem(MEMORY_KEY)
+    if (!raw) return base
+    const p = JSON.parse(raw)
+    return {
+      done: { ...(p.done || {}) },
+      stars: { ...(p.stars || {}) },
+    }
+  } catch {
+    return base
+  }
+}
+
+function saveMemory(state: MemoryState) {
+  try {
+    localStorage.setItem(MEMORY_KEY, JSON.stringify(state))
+  } catch {
+    /* ignore */
+  }
+}
+
 const calc = reactive(loadTrack(CALC_KEY, CALC_UNLOCK_ORDER.length))
 const rec = reactive(loadTrack(REC_KEY, REC_UNLOCK_ORDER.length))
 const cmp = reactive(loadTrack(CMP_KEY, CMP_UNLOCK_ORDER.length))
 const attr = reactive(loadAttr())
+const memory = reactive(loadMemory())
 /** 拼图形三模式全开：unlockedIndex 固定为最后一项 */
 const compose = reactive(() => {
   const t = loadTrack(COMPOSE_KEY, COMPOSE_UNLOCK_ORDER.length)
@@ -120,6 +153,11 @@ function isAttrUnlocked(id: AttrModeId) {
 
 function isComposeUnlocked(id: ComposeModeId) {
   return COMPOSE_UNLOCK_ORDER.includes(id)
+}
+
+/** 记忆关目前全部开放；预留 id 校验 */
+function isMemoryUnlocked(id: MemoryModeId) {
+  return id === 'numPair'
 }
 
 function completeCalc(id: CalcModeId, stars = 2) {
@@ -168,22 +206,32 @@ function completeCompose(id: ComposeModeId, stars = 2) {
   saveTrack(COMPOSE_KEY, compose)
 }
 
+function completeMemory(id: MemoryModeId, stars = 2) {
+  if (id !== 'numPair') return
+  memory.done[id] = true
+  memory.stars[id] = Math.max(memory.stars[id] ?? 0, stars)
+  saveMemory(memory)
+}
+
 export function useSenseProgress() {
   return {
     calc,
     rec,
     cmp,
     attr,
+    memory,
     compose,
     isCalcUnlocked,
     isRecUnlocked,
     isCmpUnlocked,
     isAttrUnlocked,
     isComposeUnlocked,
+    isMemoryUnlocked,
     completeCalc,
     completeRec,
     completeCmp,
     completeAttr,
     completeCompose,
+    completeMemory,
   }
 }
