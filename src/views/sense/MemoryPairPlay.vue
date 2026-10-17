@@ -1,18 +1,21 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import SenseChrome from '../../components/sense/SenseChrome.vue'
 import Celebrate from '../../components/sense/Celebrate.vue'
-import { MEMORY_MODES } from '../../data/sense/meta'
+import { COLORS } from '../../data/sense/attr'
+import { MEMORY_MODES, type MemoryModeId } from '../../data/sense/meta'
 import { shuffle } from '../../data/sense/util'
 import { useSenseProgress } from '../../composables/useSenseProgress'
 import { useSpeech } from '../../composables/useSpeech'
 
 interface Card {
   id: string
-  pairId: number
-  kind: 'digit' | 'qty'
-  n: number
+  pairId: string | number
+  kind: 'digit' | 'qty' | 'color'
+  n?: number
+  hex?: string
+  name?: string
   faceUp: boolean
   matched: boolean
   pulse: boolean
@@ -20,19 +23,26 @@ interface Card {
 
 const POOL = [1, 2, 3, 4, 5] as const
 const MISMATCH_MS = 700
+const LIGHT_COLORS = new Set(['white', 'yellow', 'pink', 'gray', 'cyan'])
 
+const route = useRoute()
 const router = useRouter()
 const { completeMemory } = useSenseProgress()
 const { speak } = useSpeech()
 
-const meta = MEMORY_MODES.find((m) => m.id === 'numPair')!
+const modeId = computed<MemoryModeId>(() =>
+  String(route.params.slug) === 'color-pair' ? 'colorPair' : 'numPair',
+)
+const isColor = computed(() => modeId.value === 'colorPair')
+const meta = computed(() => MEMORY_MODES.find((m) => m.id === modeId.value)!)
+
 const round = ref(1)
 const cards = ref<Card[]>([])
 const openIds = ref<string[]>([])
 const busy = ref(false)
 const celebrate = ref(false)
 const bridge = ref(false)
-const prompt = ref('翻两张，让数字和苹果一样多')
+const prompt = ref('')
 
 let flipTimer: ReturnType<typeof setTimeout> | null = null
 let bridgeTimer: ReturnType<typeof setTimeout> | null = null
@@ -61,38 +71,75 @@ function deal(pairCount: number) {
   busy.value = false
   openIds.value = []
   bridge.value = false
-  const ns = pickNs(pairCount)
   const list: Card[] = []
-  for (const n of ns) {
-    list.push({
-      id: `d-${n}-${pairCount}`,
-      pairId: n,
-      kind: 'digit',
-      n,
-      faceUp: false,
-      matched: false,
-      pulse: false,
-    })
-    list.push({
-      id: `q-${n}-${pairCount}`,
-      pairId: n,
-      kind: 'qty',
-      n,
-      faceUp: false,
-      matched: false,
-      pulse: false,
-    })
+
+  if (isColor.value) {
+    const picked = shuffle([...COLORS]).slice(0, pairCount)
+    for (const c of picked) {
+      for (const copy of [0, 1] as const) {
+        list.push({
+          id: `c-${c.id}-${copy}-${pairCount}`,
+          pairId: c.id,
+          kind: 'color',
+          hex: c.hex,
+          name: c.name,
+          faceUp: false,
+          matched: false,
+          pulse: false,
+        })
+      }
+    }
+    prompt.value =
+      pairCount === 3
+        ? '翻两张，找出一样的颜色'
+        : '再来难一点：找相同颜色'
+  } else {
+    const ns = pickNs(pairCount)
+    for (const n of ns) {
+      list.push({
+        id: `d-${n}-${pairCount}`,
+        pairId: n,
+        kind: 'digit',
+        n,
+        faceUp: false,
+        matched: false,
+        pulse: false,
+      })
+      list.push({
+        id: `q-${n}-${pairCount}`,
+        pairId: n,
+        kind: 'qty',
+        n,
+        faceUp: false,
+        matched: false,
+        pulse: false,
+      })
+    }
+    prompt.value =
+      pairCount === 3
+        ? '翻两张，让数字和苹果一样多'
+        : '再来难一点：翻两张配对'
   }
+
   cards.value = shuffle(list)
-  prompt.value =
-    pairCount === 3
-      ? '翻两张，让数字和苹果一样多'
-      : '再来难一点：翻两张配对'
   speak(prompt.value)
 }
 
 function allMatched(): boolean {
   return cards.value.length > 0 && cards.value.every((c) => c.matched)
+}
+
+function isMatch(a: Card, b: Card): boolean {
+  if (a.pairId !== b.pairId || a.id === b.id) return false
+  if (isColor.value) return a.kind === 'color' && b.kind === 'color'
+  return a.kind !== b.kind
+}
+
+function faceLabel(c: Card): string {
+  if (!(c.faceUp || c.matched)) return '牌背面，点开'
+  if (c.kind === 'digit') return `数字 ${c.n}`
+  if (c.kind === 'qty') return `${c.n} 个苹果`
+  return c.name || '颜色'
 }
 
 function onCardClick(card: Card) {
@@ -110,12 +157,12 @@ function onCardClick(card: Card) {
   const a = cards.value.find((c) => c.id === aId)!
   const b = cards.value.find((c) => c.id === bId)!
 
-  if (a.pairId === b.pairId && a.kind !== b.kind) {
+  if (isMatch(a, b)) {
     a.matched = true
     b.matched = true
     a.pulse = true
     b.pulse = true
-    speak(String(a.n))
+    speak(isColor.value ? a.name || '' : String(a.n))
     flipTimer = setTimeout(() => {
       a.pulse = false
       b.pulse = false
@@ -146,7 +193,7 @@ function onRoundClear() {
     }, 1100)
     return
   }
-  completeMemory('numPair', 2)
+  completeMemory(modeId.value, 2)
   celebrate.value = true
   speak('太棒了')
 }
@@ -160,6 +207,15 @@ function playAgain() {
 function goHome() {
   router.push('/sense/recognize')
 }
+
+function resetForMode() {
+  celebrate.value = false
+  bridge.value = false
+  round.value = 1
+  deal(3)
+}
+
+watch(modeId, () => resetForMode())
 
 onMounted(() => deal(3))
 onUnmounted(() => clearTimers())
@@ -190,22 +246,23 @@ onUnmounted(() => clearTimers())
           }"
           :style="{ '--i': i }"
           :disabled="c.matched || busy"
-          :aria-label="
-            c.faceUp || c.matched
-              ? c.kind === 'digit'
-                ? `数字 ${c.n}`
-                : `${c.n} 个苹果`
-              : '牌背面，点开'
-          "
+          :aria-label="faceLabel(c)"
           @click="onCardClick(c)"
         >
           <span class="inner">
             <span class="face back" aria-hidden="true">★</span>
-            <span class="face front">
+            <span class="face front" :class="{ colorFront: c.kind === 'color' }">
               <span v-if="c.kind === 'digit'" class="digit">{{ c.n }}</span>
-              <span v-else class="qty" :aria-hidden="true">
+              <span v-else-if="c.kind === 'qty'" class="qty" :aria-hidden="true">
                 <span v-for="k in c.n" :key="k" class="apple">🍎</span>
               </span>
+              <span
+                v-else
+                class="swatch"
+                :class="{ light: LIGHT_COLORS.has(String(c.pairId)) }"
+                :style="{ background: c.hex }"
+                aria-hidden="true"
+              />
             </span>
           </span>
         </button>
@@ -293,6 +350,11 @@ onUnmounted(() => clearTimers())
   background: var(--card);
   transform: rotateY(180deg);
 }
+.front.colorFront {
+  background: transparent;
+  padding: 0;
+  overflow: hidden;
+}
 .digit {
   font-size: clamp(32px, 10vw, 48px);
   font-weight: 900;
@@ -311,6 +373,15 @@ onUnmounted(() => clearTimers())
 .apple {
   font-size: clamp(14px, 4.2vw, 20px);
   line-height: 1;
+}
+.swatch {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 18px;
+}
+.swatch.light {
+  box-shadow: inset 0 0 0 2px rgba(92, 75, 81, 0.28);
 }
 
 .flip.matched .front {

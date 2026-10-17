@@ -5,6 +5,7 @@ import {
   MEMORY_MODES,
   REC_MODES,
   type AttrModeId,
+  type MemoryModeId,
   type RecModeId,
 } from '../../data/sense/meta'
 import { useSenseProgress } from '../../composables/useSenseProgress'
@@ -21,7 +22,11 @@ const mapSpeak = '认一认。先玩数字，也可以学颜色和图形，还�
 const colorLine = ATTR_MODES.filter((m) => m.id === 'colorIntro' || m.id === 'colorQuiz')
 const shapeLine = ATTR_MODES.filter((m) => m.id === 'shapeIntro' || m.id === 'shapeQuiz')
 const comboMeta = ATTR_MODES.find((m) => m.id === 'combo')!
-const memoryMeta = MEMORY_MODES.find((m) => m.id === 'numPair')!
+
+const MEMORY_SLUG: Record<MemoryModeId, string> = {
+  numPair: 'num-pair',
+  colorPair: 'color-pair',
+}
 
 function openRec(id: string) {
   const mode = id as RecModeId
@@ -44,12 +49,12 @@ function openAttr(id: string) {
   router.push(`/sense/recognize/${mode}`)
 }
 
-function openMemory() {
-  if (!isMemoryUnlocked('numPair')) {
+function openMemory(id: MemoryModeId) {
+  if (!isMemoryUnlocked(id)) {
     speak('先过前面这一关哦')
     return
   }
-  router.push('/sense/memory/num-pair')
+  router.push(`/sense/memory/${MEMORY_SLUG[id]}`)
 }
 </script>
 
@@ -85,19 +90,21 @@ function openMemory() {
 
     <section class="sec">
       <h2>记忆</h2>
-      <p class="lead">翻牌 · 数字对数量</p>
+      <p class="lead">翻牌 · 数字对数量 · 同色配对</p>
       <div class="list">
         <button
+          v-for="m in MEMORY_MODES"
+          :key="m.id"
           type="button"
           class="row"
-          :class="{ locked: !isMemoryUnlocked('numPair') }"
-          @click="openMemory"
+          :class="{ locked: !isMemoryUnlocked(m.id as MemoryModeId) }"
+          @click="openMemory(m.id as MemoryModeId)"
         >
-          <span class="idx lavender">{{ isMemoryUnlocked('numPair') ? '·' : '🔒' }}</span>
+          <span class="idx lavender">{{ isMemoryUnlocked(m.id as MemoryModeId) ? '·' : '🔒' }}</span>
           <span class="body">
-            <span class="name">{{ memoryMeta.emoji }} {{ memoryMeta.name }}</span>
-            <span class="blurb">{{ memoryMeta.blurb }}</span>
-            <StarsRow :count="memory.stars.numPair ?? 0" :size="16" />
+            <span class="name">{{ m.emoji }} {{ m.name }}</span>
+            <span class="blurb">{{ m.blurb }}</span>
+            <StarsRow :count="memory.stars[m.id] ?? 0" :size="16" />
           </span>
         </button>
       </div>

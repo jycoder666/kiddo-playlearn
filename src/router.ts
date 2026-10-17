@@ -76,11 +76,14 @@ export const router = createRouter({
       },
     },
     {
-      path: '/sense/memory/num-pair',
+      path: '/sense/memory/:slug',
       component: () => import('./views/sense/MemoryPairPlay.vue'),
-      beforeEnter: () => {
-        if (!MEMORY_MODES.some((m) => m.id === 'numPair')) return '/sense/recognize'
-        if (!useSenseProgress().isMemoryUnlocked('numPair')) return '/sense/recognize'
+      beforeEnter: (to) => {
+        const slug = String(to.params.slug)
+        const id =
+          slug === 'num-pair' ? 'numPair' : slug === 'color-pair' ? 'colorPair' : null
+        if (!id || !MEMORY_MODES.some((m) => m.id === id)) return '/sense/recognize'
+        if (!useSenseProgress().isMemoryUnlocked(id)) return '/sense/recognize'
       },
     },
     { path: '/:pathMatch(.*)*', redirect: '/' },
