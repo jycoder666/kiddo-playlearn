@@ -1,0 +1,13 @@
+level_id,item_id,type,prompt_zh,prompt_icon,correct,options,meta
+5,1,map,上面是北，点北,⬆️,N,,target=badge
+5,2,map,学校在家哪边,🏫,N,,target=school
+5,3,map,商店在家哪边,🏪,E,,target=shop
+5,4,mapfind,家的北边是什么,⬆️北,school,,dir=N
+5,5,map,公园在家哪边,🌳,S,,target=park
+5,6,mapfind,家的东边是什么,➡️东,shop,,dir=E
+5,7,map,家在中间，点中,🏠,C,,target=home
+5,8,mapfind,家的南边是什么,⬇️南,park,,dir=S
+5,9,map,湖在家哪边,🌊,W,,target=lake
+5,10,mapfind,正中间是什么,🎯中,home,,dir=C
+5,11,map,右边是东，点东,➡️,E,,
+5,12,map,学校在家哪边,🏫,N,,target=school

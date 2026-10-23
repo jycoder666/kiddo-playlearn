@@ -1,0 +1,9 @@
+level_id,item_id,type,prompt_zh,prompt_icon,correct,options,meta
+4,1,grid9,点正中间,🎯,C,,
+4,2,grid9,谁在正中间,🎯,C,,items=🍎|🍌|🍇|🍓|🥕|🍊|🍉|🍒|🍑
+4,3,place,把星星放中间,⭐,C,,
+4,4,grid9,点上面一格,⬆️,U,,
+4,5,grid9,谁在正中间,🎯,C,,items=🐱|🐶|🐼|🐸|🐰|🐻|🐷|🐵|🐥
+4,6,place,把星星放左边,⬅️,L,,
+4,7,grid9,点下面一格,⬇️,D,,
+4,8,place,把星星放中间,⭐,C,,

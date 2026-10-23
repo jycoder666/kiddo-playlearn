@@ -1,0 +1,112 @@
+:root {
+  --bg-cream: #FFF5F7;
+  --hero: #FFB4A2;
+  --mint: #B8E0D2;
+  --accent: #A8D5E5;
+  --accent-strong: #5FA9C6;
+  --warn: #F7C59F;
+  --lavender: #E2D1F9;
+  --ink: #5C4B51;
+  --ink-soft: #9A8A90;
+  --card: #FFFFFF;
+  --locked: #E6DDE0;
+  --gold: #FFC94D;
+  --radius: 22px;
+  --hit: 72px;
+  --cell: 88px;
+  --shadow: 0 5px 0 rgba(92, 75, 81, 0.12);
+  --font: 'PingFang SC', 'HarmonyOS Sans SC', 'Microsoft YaHei', 'Noto Sans SC', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body { margin: 0; padding: 0; height: 100%; }
+
+body {
+  font-family: var(--font);
+  color: var(--ink);
+  background: #F6E4EA;
+  -webkit-user-select: none;
+  user-select: none;
+  overscroll-behavior: none;
+}
+
+#app { min-height: 100dvh; }
+
+button {
+  font: inherit;
+  color: inherit;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+img { -webkit-user-drag: none; }
+
+/* 可点控件热区 ≥72 */
+.hot {
+  min-width: var(--hit);
+  min-height: var(--hit);
+  border-radius: var(--radius);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  transition: transform 0.12s ease;
+}
+.hot:active { transform: scale(0.95); }
+
+.btn-primary {
+  background: var(--hero);
+  color: #fff;
+  font-size: 22px;
+  padding: 0 28px;
+  box-shadow: 0 6px 0 #E8907C;
+  text-shadow: 0 1px 0 rgba(92, 75, 81, 0.25);
+}
+.btn-secondary {
+  background: var(--card);
+  font-size: 20px;
+  padding: 0 22px;
+  box-shadow: var(--shadow);
+  border: 3px solid var(--mint);
+}
+
+/* 纠错 2 阶高亮 / 正确态 */
+.is-hl {
+  outline: 5px solid var(--accent-strong);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 10px rgba(168, 213, 229, 0.55) !important;
+  animation: pulse 0.9s ease-in-out infinite;
+}
+.is-dim { opacity: 0.45; }
+.is-ok {
+  background: var(--mint) !important;
+  outline: 5px solid #7CC3AB;
+  outline-offset: 2px;
+}
+.is-shake { animation: shake 0.42s ease; }
+
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(5px); }
+}
+@keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+@keyframes bounce { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-16px); } }
+@keyframes pop { 0% { transform: scale(0); opacity: 0; } 70% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
